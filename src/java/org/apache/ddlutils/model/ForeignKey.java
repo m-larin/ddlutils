@@ -29,7 +29,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 /**
  * Represents a database foreign key.
  * 
- * @version $Revision$
+ * @version $Revision: 504014 $
  */
 public class ForeignKey implements Cloneable
 {
@@ -43,6 +43,10 @@ public class ForeignKey implements Cloneable
     private ListOrderedSet _references = new ListOrderedSet();
     /** Whether this foreign key has an associated auto-generated index. */
     private boolean _autoIndexPresent;
+    /** The action to perform when the value of the referenced column changes. */
+    private CascadeActionEnum _onUpdate = CascadeActionEnum.NONE;
+    /** The action to perform when the referenced row is deleted. */
+    private CascadeActionEnum _onDelete = CascadeActionEnum.NONE;    
 
     /**
      * Creates a new foreign key object that has no name.
@@ -431,4 +435,54 @@ public class ForeignKey implements Cloneable
 
         return result.toString();
     }
+    
+    /**
+     * Returns the action for this foreignkey for when the referenced row is changed.
+     * 
+     * @return The action
+     */
+    public CascadeActionEnum getOnUpdate()
+    {
+        return _onUpdate;
+    }
+
+    /**
+     * Sets the action for this foreignkey for when the referenced row is changed.
+     * 
+     * @param onUpdate The action
+     * @throws NullPointerException If <code>onUdate</code> is null
+     */
+    public void setOnUpdate(CascadeActionEnum onUpdate) throws NullPointerException
+    {
+        if (onUpdate == null)
+        {
+            throw new NullPointerException("The onUpdate action cannot be null");
+        }
+        _onUpdate = onUpdate;
+    }
+    
+    /**
+     * Returns the action for this foreignkey for when the referenced row is deleted.
+     * 
+     * @return The action
+     */
+    public CascadeActionEnum getOnDelete()
+    {
+        return _onDelete;
+    }
+
+    /**
+     * Sets the action for this foreignkey for when the referenced row is deleted.
+     * 
+     * @param onDelete The action
+     * @throws NullPointerException If <code>onDelete</code> is null
+     */
+    public void setOnDelete(CascadeActionEnum onDelete) throws NullPointerException
+    {
+        if (onDelete == null)
+        {
+            throw new NullPointerException("The onDelete action cannot be null");
+        }
+        _onDelete = onDelete;
+    }    
 }

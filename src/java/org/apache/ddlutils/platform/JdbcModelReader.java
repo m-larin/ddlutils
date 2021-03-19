@@ -42,20 +42,24 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformInfo;
+import org.apache.ddlutils.model.CascadeActionEnum;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
 import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.IndexColumn;
+import org.apache.ddlutils.model.ModelException;
 import org.apache.ddlutils.model.NonUniqueIndex;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Table;
 import org.apache.ddlutils.model.UniqueIndex;
 
+import sun.awt.windows.WWindowPeer;
+
 /**
  * An utility class to create a Database model from a live database.
  *
- * @version $Revision$
+ * @version $Revision: 543392 $
  */
 public class JdbcModelReader
 {
@@ -895,6 +899,54 @@ public class JdbcModelReader
         {
             fk = new ForeignKey(fkName);
             fk.setForeignTableName((String)values.get("PKTABLE_NAME"));
+            
+            Integer onDelete = (Integer)values.get("DELETE_RULE");
+            if (onDelete != null) {
+                switch(onDelete) {
+                    case DatabaseMetaData.importedKeyNoAction:
+                        fk.setOnDelete(CascadeActionEnum.NONE);
+                        break;
+                    case DatabaseMetaData.importedKeyCascade :
+                        fk.setOnDelete(CascadeActionEnum.CASCADE);
+                        break;
+                    case DatabaseMetaData.importedKeySetNull  :
+                        fk.setOnDelete(CascadeActionEnum.SET_NULL);
+                        break;
+                    case DatabaseMetaData.importedKeyRestrict   :
+                        fk.setOnDelete(CascadeActionEnum.RESTRICT);
+                        break;
+                    case DatabaseMetaData.importedKeySetDefault    :
+                        fk.setOnDelete(CascadeActionEnum.SET_DEFAULT);
+                        break;
+                    default:
+                        throw new ModelException("Unsupported DELETE RULE '" + onDelete + "' for foreign key  " + fkName);                    
+                }
+            }
+            
+            Integer onUpdate = (Integer)values.get("UPDATE_RULE");
+            if (onUpdate != null) {
+                switch(onDelete) {
+                    case DatabaseMetaData.importedKeyNoAction:
+                        fk.setOnUpdate(CascadeActionEnum.NONE);
+                        break;
+                    case DatabaseMetaData.importedKeyCascade :
+                        fk.setOnUpdate(CascadeActionEnum.CASCADE);
+                        break;
+                    case DatabaseMetaData.importedKeySetNull  :
+                        fk.setOnUpdate(CascadeActionEnum.SET_NULL);
+                        break;
+                    case DatabaseMetaData.importedKeyRestrict   :
+                        fk.setOnUpdate(CascadeActionEnum.RESTRICT);
+                        break;
+                    case DatabaseMetaData.importedKeySetDefault    :
+                        fk.setOnUpdate(CascadeActionEnum.SET_DEFAULT);
+                        break;
+                    default:
+                        throw new ModelException("Unsupported UPDATE RULE '" + onDelete + "' for foreign key  " + fkName);                    
+                }
+            }
+            
+            
             knownFks.put(fkName, fk);
         }
 

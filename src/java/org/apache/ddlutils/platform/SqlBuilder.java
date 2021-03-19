@@ -63,6 +63,7 @@ import org.apache.ddlutils.alteration.RemoveIndexChange;
 import org.apache.ddlutils.alteration.RemovePrimaryKeyChange;
 import org.apache.ddlutils.alteration.RemoveTableChange;
 import org.apache.ddlutils.alteration.TableChange;
+import org.apache.ddlutils.model.CascadeActionEnum;
 import org.apache.ddlutils.model.Column;
 import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.model.ForeignKey;
@@ -86,7 +87,7 @@ import org.apache.ddlutils.util.MultiInstanceofPredicate;
  * it requires. Though often that can be quite complex when attempting to reuse code across many databases.
  * Hopefully only a small amount code needs to be changed on a per database basis.
  * 
- * @version $Revision$
+ * @version $Revision: 518498 $
  */
 public abstract class SqlBuilder
 {
@@ -2517,11 +2518,87 @@ public abstract class SqlBuilder
             printIdentifier(getTableName(database.findTable(key.getForeignTableName())));
             print(" (");
             writeForeignReferences(key);
-            print(")");
+            print(") ");
+            writeForeignKeyOnDeleteAction(table, key);
+            writeForeignKeyOnUpdateAction(table, key);
+            
             printEndOfStatement();
         }
     }
 
+    /**
+     * Writes the onDelete action for the given foreign key.
+     *  
+     * @param table      The table
+     * @param foreignKey The foreignkey
+     */
+    protected void writeForeignKeyOnDeleteAction(Table table, ForeignKey foreignKey) throws IOException
+    {
+        CascadeActionEnum action = foreignKey.getOnDelete();
+        
+        if (action != null) {
+            print(" ON DELETE ");
+            switch (action.getValue())
+            {
+                case CascadeActionEnum.VALUE_CASCADE:
+                    print("CASCADE");
+                    break;
+                case CascadeActionEnum.VALUE_SET_NULL:
+                    print("SET NULL");
+                    break;
+                case CascadeActionEnum.VALUE_SET_DEFAULT:
+                    print("SET DEFAULT");
+                    break;
+                case CascadeActionEnum.VALUE_RESTRICT:
+                    print("RESTRICT");
+                    break;
+                case CascadeActionEnum.VALUE_NONE:
+                    print("NO ACTION");
+                    break;
+                default:
+                    throw new ModelException("Unsupported cascade value '" + action +
+                                             "' for onDelete in foreign key in table " + table.getName());
+            }
+        }
+    }    
+
+    /**
+     * Writes the onDelete action for the given foreign key.
+     *  
+     * @param table      The table
+     * @param foreignKey The foreignkey
+     */
+    protected void writeForeignKeyOnUpdateAction(Table table, ForeignKey foreignKey) throws IOException
+    {
+        CascadeActionEnum action = foreignKey.getOnUpdate();
+        
+        if(action != null) { 
+            print(" ON UPDATE ");
+            switch (action.getValue())
+            {
+                case CascadeActionEnum.VALUE_CASCADE:
+                    print("CASCADE");
+                    break;
+                case CascadeActionEnum.VALUE_SET_NULL:
+                    print("SET NULL");
+                    break;
+                case CascadeActionEnum.VALUE_SET_DEFAULT:
+                    print("SET DEFAULT");
+                    break;
+                case CascadeActionEnum.VALUE_RESTRICT:
+                    print("RESTRICT");
+                    break;
+                case CascadeActionEnum.VALUE_NONE:
+                    print("NO ACTION");
+                    break;
+                default:
+                    throw new ModelException("Unsupported cascade value '" + action +
+                                             "' for onUpdate in foreign key in table " + table.getName());
+            }
+        }
+    }    
+    
+    
     /**
      * Writes a list of local references for the given foreign key.
      * 
